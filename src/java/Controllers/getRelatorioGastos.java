@@ -43,7 +43,7 @@ public class getRelatorioGastos extends HttpServlet {
         
         try{
         Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = new ValidadorCookie();
+        ValidadorCookie validar = criarValidadorCookie();
         
         resultado = validar.validarFuncionario(cookies);
         }catch(java.lang.NullPointerException e){System.out.println(e);}
@@ -51,7 +51,7 @@ public class getRelatorioGastos extends HttpServlet {
         
         if(resultado){
             
-            DaoRelatorio dr = new DaoRelatorio();
+            DaoRelatorio dr = criarDaoRelatorio();
             List<RelatorioGastos> relatorio = dr.listarRelGastos();
 
             Gson gson = new Gson();
@@ -68,12 +68,19 @@ public class getRelatorioGastos extends HttpServlet {
         }
     }
 
+    protected ValidadorCookie criarValidadorCookie() {
+        return new ValidadorCookie();
+    }
+
+    protected DaoRelatorio criarDaoRelatorio() {
+        return new DaoRelatorio();
+    }
+
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
+     * @param request servlet request, servlet response
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
@@ -86,8 +93,7 @@ public class getRelatorioGastos extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
+     * @param request servlet request, servlet response
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
