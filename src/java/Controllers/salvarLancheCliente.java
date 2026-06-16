@@ -34,10 +34,10 @@ public class salvarLancheCliente extends HttpServlet {
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -46,85 +46,85 @@ public class salvarLancheCliente extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
         String json = "";
-        
-        ////////Validar Cookie
+
+        //////// Validar Cookie
         boolean resultado = false;
-        
-        try{
-        Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = new ValidadorCookie();
-        
-        resultado = validar.validar(cookies);
-        }catch(java.lang.NullPointerException e){}
+
+        try {
+            Cookie[] cookies = request.getCookies();
+            ValidadorCookie validar = criarValidadorCookie();
+
+            resultado = validar.validar(cookies);
+        } catch (java.lang.NullPointerException e) {
+        }
         //////////////
-        
+
         if ((br != null) && resultado) {
             json = br.readLine();
-            byte[] bytes = json.getBytes(ISO_8859_1); 
-            String jsonStr = new String(bytes, UTF_8);            
+            byte[] bytes = json.getBytes(ISO_8859_1);
+            String jsonStr = new String(bytes, UTF_8);
             JSONObject dados = new JSONObject(jsonStr);
             JSONObject ingredientes = dados.getJSONObject("ingredientes");
-            
+
             double precoDoLanche = 0.00;
-            
+
             Lanche lanche = new Lanche();
-            
+
             lanche.setNome(dados.getString("nome"));
             lanche.setDescricao(dados.getString("descricao"));
-            
-            
-            DaoLanche lancheDao = new DaoLanche();
-            DaoIngrediente ingredienteDao = new DaoIngrediente();
-            
+
+            DaoLanche lancheDao = criarDaoLanche();
+            DaoIngrediente ingredienteDao = criarDaoIngrediente();
+
             Iterator<String> keys = ingredientes.keys();
-            
-            while(keys.hasNext()) {
-                
-                String key = keys.next(); 
+
+            while (keys.hasNext()) {
+
+                String key = keys.next();
                 Ingrediente ingredienteLanche = new Ingrediente();
                 ingredienteLanche.setNome(key);
-                
+
                 Ingrediente ingredienteComID = ingredienteDao.pesquisaPorNome(ingredienteLanche);
                 precoDoLanche += ingredienteComID.getValor_venda() * Double.valueOf(ingredientes.getInt(key));
             }
-            
-            
+
             lanche.setValor_venda(precoDoLanche);
             lancheDao.salvarCliente(lanche);
-            
+
             Lanche lancheComID = lancheDao.pesquisaPorNome(lanche);
-            
-            while(keys.hasNext()) {
-                
-                String key = keys.next(); 
+
+            while (keys.hasNext()) {
+
+                String key = keys.next();
                 Ingrediente ingredienteLanche = new Ingrediente();
                 ingredienteLanche.setNome(key);
-                
+
                 Ingrediente ingredienteComID = ingredienteDao.pesquisaPorNome(ingredienteLanche);
                 ingredienteComID.setQuantidade(ingredientes.getInt(key));
                 lancheDao.vincularIngrediente(lancheComID, ingredienteComID);
             }
-            
+
             try (PrintWriter out = response.getWriter()) {
-            out.println("../carrinho/carrinho.html?nome="+String.valueOf(lancheComID.getNome())+"&preco="+String.valueOf(lancheComID.getValor_venda()));
+                out.println("../carrinho/carrinho.html?nome=" + String.valueOf(lancheComID.getNome()) + "&preco="
+                        + String.valueOf(lancheComID.getValor_venda()));
             }
         } else {
             try (PrintWriter out = response.getWriter()) {
-            out.println("erro");
+                out.println("erro");
+            }
         }
-        }
-        
-        
+
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
+    // + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -135,10 +135,10 @@ public class salvarLancheCliente extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -155,5 +155,17 @@ public class salvarLancheCliente extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
+
+    protected ValidadorCookie criarValidadorCookie() {
+        return new ValidadorCookie();
+    }
+
+    protected DaoIngrediente criarDaoIngrediente() {
+        return new DaoIngrediente();
+    }
+
+    protected DaoLanche criarDaoLanche() {
+        return new DaoLanche();
+    }
 
 }
