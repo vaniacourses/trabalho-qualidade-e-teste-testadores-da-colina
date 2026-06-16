@@ -6,6 +6,8 @@ import DAO.DaoLanche;
 import DAO.DaoPedido;
 import Helpers.ValidadorCookie;
 import Model.Cliente;
+import Model.Pedido;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,26 +30,43 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ComprarTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoCliente daoClienteMock;
-    @Mock private DaoLanche daoLancheMock;
-    @Mock private DaoBebida daoBebidaMock;
-    @Mock private DaoPedido daoPedidoMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoCliente daoClienteMock;
+    @Mock
+    private DaoLanche daoLancheMock;
+    @Mock
+    private DaoBebida daoBebidaMock;
+    @Mock
+    private DaoPedido daoPedidoMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
     private class ComprarTestavel extends comprar {
-        protected ValidadorCookie criarValidadorCookie() { return validadorMock; }
+        protected ValidadorCookie criarValidadorCookie() {
+            return validadorMock;
+        }
 
-        protected DaoCliente criarDaoCliente() { return daoClienteMock; }
+        protected DaoCliente criarDaoCliente() {
+            return daoClienteMock;
+        }
 
-        protected DaoLanche criarDaoLanche() { return daoLancheMock; }
+        protected DaoLanche criarDaoLanche() {
+            return daoLancheMock;
+        }
 
-        protected DaoBebida criarDaoBebida() { return daoBebidaMock; }
+        protected DaoBebida criarDaoBebida() {
+            return daoBebidaMock;
+        }
 
-        protected DaoPedido criarDaoPedido() { return daoPedidoMock; }
+        protected DaoPedido criarDaoPedido() {
+            return daoPedidoMock;
+        }
     }
 
     private ServletInputStream criarInput(String json) {
@@ -106,6 +125,9 @@ public class ComprarTest {
 
         Cliente cliente = new Cliente();
         when(daoClienteMock.pesquisaPorID("1")).thenReturn(cliente);
+
+        when(daoPedidoMock.pesquisaPorData(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new Pedido());
 
         new ComprarTestavel().processRequest(request, response);
 
