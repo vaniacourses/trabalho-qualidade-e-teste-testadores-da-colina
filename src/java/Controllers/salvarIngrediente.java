@@ -31,10 +31,10 @@ public class salvarIngrediente extends HttpServlet {
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -43,24 +43,25 @@ public class salvarIngrediente extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
         String json = "";
-        
-        ////////Validar Cookie
+
+        //////// Validar Cookie
         boolean resultado = false;
-        
-        try{
-        Cookie[] cookies = request.getCookies();
-        ValidadorCookie validar = new ValidadorCookie();
-        
-        resultado = validar.validarFuncionario(cookies);
-        }catch(java.lang.NullPointerException e){}
+
+        try {
+            Cookie[] cookies = request.getCookies();
+            ValidadorCookie validar = criarValidadorCookie();
+
+            resultado = validar.validarFuncionario(cookies);
+        } catch (java.lang.NullPointerException e) {
+        }
         //////////////
-        
+
         if ((br != null) && resultado) {
             json = br.readLine();
-            byte[] bytes = json.getBytes(ISO_8859_1); 
-            String jsonStr = new String(bytes, UTF_8);            
+            byte[] bytes = json.getBytes(ISO_8859_1);
+            String jsonStr = new String(bytes, UTF_8);
             JSONObject dados = new JSONObject(jsonStr);
-            
+
             Ingrediente ingrediente = new Ingrediente();
             ingrediente.setNome(dados.getString("nome"));
             ingrediente.setDescricao(dados.getString("descricao"));
@@ -69,30 +70,30 @@ public class salvarIngrediente extends HttpServlet {
             ingrediente.setValor_venda(dados.getDouble("ValorVenda"));
             ingrediente.setTipo(dados.getString("tipo"));
             ingrediente.setFg_ativo(1);
-            
-            DaoIngrediente ingredienteDAO = new DaoIngrediente();
-            ingredienteDAO.salvar(ingrediente);
-            
+
+            DaoIngrediente ingredienteDao = criarDaoIngrediente();
+            ingredienteDao.salvar(ingrediente);
+
             try (PrintWriter out = response.getWriter()) {
-            out.println("Ingrediente Salvo!");
+                out.println("Ingrediente Salvo!");
             }
         } else {
             try (PrintWriter out = response.getWriter()) {
-            out.println("erro");
+                out.println("erro");
+            }
         }
-        }
-        
-        
+
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the
+    // + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -103,10 +104,10 @@ public class salvarIngrediente extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
+     * @param request  servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws IOException      if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -123,5 +124,13 @@ public class salvarIngrediente extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
+
+    protected ValidadorCookie criarValidadorCookie() {
+        return new ValidadorCookie();
+    }
+
+    protected DaoIngrediente criarDaoIngrediente() {
+        return new DaoIngrediente();
+    }
 
 }
