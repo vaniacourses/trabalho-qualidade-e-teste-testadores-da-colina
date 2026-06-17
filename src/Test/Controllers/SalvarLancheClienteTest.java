@@ -27,11 +27,16 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SalvarLancheClienteTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoIngrediente daoIngredienteMock;
-    @Mock private DaoLanche daoLancheMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoIngrediente daoIngredienteMock;
+    @Mock
+    private DaoLanche daoLancheMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
@@ -119,5 +124,76 @@ public class SalvarLancheClienteTest {
         new SalvarLancheTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("carrinho"));
+    }
+
+    @Test
+    public void semCookieDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+
+        new SalvarLancheTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void cookieValidoComDoisIngredientesDeveRetornarCarrinho() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "ok") };
+
+        String json = "{\"nome\":\"X-Tudo\",\"descricao\":\"Teste\",\"ingredientes\":{\"Queijo\":1,\"Bacon\":1}}";
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(json));
+        when(validadorMock.validar(cookies)).thenReturn(true);
+
+        Ingrediente ingrediente = new Ingrediente();
+        ingrediente.setValor_venda(5.0);
+
+        when(daoIngredienteMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Ingrediente.class)))
+                .thenReturn(ingrediente);
+
+        Lanche lanche = new Lanche();
+        lanche.setNome("X-Tudo");
+        lanche.setValor_venda(10.0);
+
+        when(daoLancheMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Lanche.class)))
+                .thenReturn(lanche);
+
+        new SalvarLancheTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("carrinho"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new SalvarLancheTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new SalvarLancheTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new SalvarLancheTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
     }
 }
