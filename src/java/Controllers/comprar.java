@@ -27,6 +27,8 @@
     import java.util.ArrayList;
     import java.util.Iterator;
     import java.util.List;
+    import java.util.logging.Level;
+    import java.util.logging.Logger;
     import javax.servlet.ServletException;
     import javax.servlet.http.Cookie;
     import javax.servlet.http.HttpServlet;
@@ -168,9 +170,14 @@
          * @throws IOException      if an I/O error occurs
          */
         @Override
-        protected void doGet(HttpServletRequest request, HttpServletResponse response)
-                throws ServletException, IOException {
-            processRequest(request, response);
+        protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+            try {
+                processRequest(request, response);
+            } catch (ServletException | IOException e) {
+                Logger.getLogger(comprar.class.getName())
+                        .log(Level.SEVERE, "Erro ao processar requisição GET", e);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
 
         /**
@@ -182,9 +189,14 @@
          * @throws IOException      if an I/O error occurs
          */
         @Override
-        protected void doPost(HttpServletRequest request, HttpServletResponse response)
-                throws ServletException, IOException {
-            processRequest(request, response);
+        protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+            try {
+                processRequest(request, response);
+            } catch (ServletException | IOException e) {
+                Logger.getLogger(comprar.class.getName())
+                        .log(Level.SEVERE, "Erro ao processar requisição POST", e);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
 
         /**

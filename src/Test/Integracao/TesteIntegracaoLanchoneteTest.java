@@ -1,6 +1,5 @@
 package Controllers;
 
-import Controllers.*;
 import DAO.*;
 import Helpers.ValidadorCookie;
 import Model.*;
@@ -53,7 +52,7 @@ public class TesteIntegracaoLanchoneteTest {
             @Override public int read() throws IOException { return bais.read(); }
             @Override public boolean isFinished() { return bais.available() == 0; }
             @Override public boolean isReady() { return true; }
-            @Override public void setReadListener(ReadListener l) {}
+            @Override public void setReadListener(ReadListener l) { /* not required for test stream */ }
         };
     }
 

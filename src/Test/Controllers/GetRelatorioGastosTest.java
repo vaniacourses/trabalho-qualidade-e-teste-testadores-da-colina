@@ -139,7 +139,7 @@ public class GetRelatorioGastosTest {
 
     // Testa se o doGet chama o processRequest
     @Test
-    public void doGetDeveChamarProcessRequest() throws Exception {
+    public void doGetDeveChamarProcessRequest(){
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
 
         when(request.getCookies()).thenReturn(cookies);
@@ -152,7 +152,7 @@ public class GetRelatorioGastosTest {
 
     // Testa se o doPost chama o processRequest
     @Test
-    public void doPostDeveChamarProcessRequest() throws Exception {
+    public void doPostDeveChamarProcessRequest(){
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
 
         when(request.getCookies()).thenReturn(cookies);

@@ -116,4 +116,31 @@ public class LoginTest {
 
         assertTrue(respostaHttp.toString().contains("carrinho.html"));
     }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        configurarCorpoRequisicao("joao", "errada");
+        when(daoClienteMock.login(any(Cliente.class))).thenReturn(false);
+
+        new LoginTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        configurarCorpoRequisicao("joao", "errada");
+        when(daoClienteMock.login(any(Cliente.class))).thenReturn(false);
+
+        new LoginTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new LoginTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
+    }
 }

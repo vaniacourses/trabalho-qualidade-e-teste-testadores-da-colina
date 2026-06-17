@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.time.Instant;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
@@ -52,6 +54,7 @@ public class login extends HttpServlet {
                 Cookie cookie = new Cookie("token", clienteCompleto.getId_cliente() + "-" + Instant.now().toString());
                 tokenDAO.salvar(cookie.getValue());
                 cookie.setMaxAge(30 * 60);
+                cookie.setHttpOnly(true);
                 response.addCookie(cookie);
             }
         }
@@ -65,15 +68,25 @@ public class login extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            Logger.getLogger(login.class.getName())
+                    .log(Level.SEVERE, "Erro ao processar requisição GET", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            processRequest(request, response);
+        } catch (ServletException | IOException e) {
+            Logger.getLogger(login.class.getName())
+                    .log(Level.SEVERE, "Erro ao processar requisição POST", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
