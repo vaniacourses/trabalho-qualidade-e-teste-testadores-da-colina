@@ -154,6 +154,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.15.8</version>
+
+                <configuration>
+                    <targetClasses>
+                        <param>Controllers.comprar</param>
+                        <param>Controllers.salvarLancheCliente</param>
+                        <param>Controllers.getLanches</param>
+                        <param>Controllers.getBebidas</param>
+                        <param>Controllers.getRelatorioGastos</param>
+                    </targetClasses>
+
+                    <targetTests>
+                        <param>Controllers.ComprarTest</param>
+                        <param>Controllers.SalvarLancheClienteTest</param>
+                        <param>Controllers.GetLanchesTest</param>
+                        <param>Controllers.GetBebidasTest</param>
+                        <param>Controllers.GetRelatorioGastosTest</param>
+                    </targetTests>
+
+                    <outputFormats>
+                        <param>HTML</param>
+                    </outputFormats>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
