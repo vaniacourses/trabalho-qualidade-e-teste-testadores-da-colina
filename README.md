@@ -1,6 +1,30 @@
-# Plano de Testes
+# Trabalho de Qualidade e Teste de Software — Testadores da Colina
 
-https://docs.google.com/document/d/1sJ6BjGiADJPM8KH4UFqo3KPaeLkM1Vod_awEb3Hu6Bg/edit?usp=sharing
+Repositório do trabalho da disciplina **Qualidade e Teste de Software (A1)** — UFF.
+Sistema sob teste: **Lanchonete Online ("Cade Burger's")**.
+
+**Equipe:** Brenda de Souza, Carlos Eduardo Alves, Paulo Rodrigo Figueiredo e Yuri Moura
+
+## 📋 Artefatos de QA
+
+| Artefato | Localização |
+|---|---|
+| 📄 **Plano de Testes** (Google Docs) | [Abrir documento](https://docs.google.com/document/d/1sJ6BjGiADJPM8KH4UFqo3KPaeLkM1Vod_awEb3Hu6Bg/edit?usp=sharing) |
+| 🧪 **Testes unitários** (JUnit 4 + Mockito) | [`src/Test/Controllers`](src/Test/Controllers) |
+| 🐞 **Defeitos** (bug tracker) | [GitHub Issues](../../issues) |
+| 📝 **Documento de Bugs/Issues** (Google Docs) | [Abrir documento](https://docs.google.com/document/d/1hVdckAPw-DxUisKo2MTNSwM5CSh48TGALNI98EbPlsM/edit?usp=sharing) |
+| ✅ **Evidências de teste manual** (TestLink) | Disponíveis na seção *Testes Manuais* do Plano de Testes |
+
+### Casos de teste unitários
+Os testes cobrem controllers com lógica não-trivial (autenticação, fluxo de compra e montagem de lanche):
+
+- [`LoginTest`](src/Test/Controllers/LoginTest.java) · [`LoginFuncionarioTest`](src/Test/Controllers/LoginFuncionarioTest.java) — autenticação
+- [`CadastroTest`](src/Test/Controllers/CadastroTest.java) — cadastro de cliente + endereço
+- [`ComprarTest`](src/Test/Controllers/ComprarTest.java) — fluxo de finalização de pedido
+- [`SalvarLancheClienteTest`](src/Test/Controllers/SalvarLancheClienteTest.java) — montagem de lanche personalizado
+- [`SalvarIngredienteTest`](src/Test/Controllers/SalvarIngredienteTest.java) · [`GetRelatorioGastosTest`](src/Test/Controllers/GetRelatorioGastosTest.java) · [`GetBebidasTest`](src/Test/Controllers/GetBebidasTest.java) · [`GetLanchesTest`](src/Test/Controllers/GetLanchesTest.java)
+
+Para executar os testes, rode `mvn test` na raiz do projeto.
 
 # APS-04-Lanchonete-Online-em-Java
 
