@@ -26,18 +26,27 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class GetLanchesTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoLanche daoLancheMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoLanche daoLancheMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
     private class GetLanchesTestavel extends getLanches {
         @Override
-        protected ValidadorCookie criarValidadorCookie() { return validadorMock; }
+        protected ValidadorCookie criarValidadorCookie() {
+            return validadorMock;
+        }
+
         @Override
-        protected DaoLanche criarDaoLanche() { return daoLancheMock; }
+        protected DaoLanche criarDaoLanche() {
+            return daoLancheMock;
+        }
     }
 
     @Before
@@ -110,5 +119,36 @@ public class GetLanchesTest {
         new GetLanchesTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("X-Burguer"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetLanchesTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetLanchesTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new GetLanchesTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
     }
 }
