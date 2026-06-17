@@ -7,6 +7,8 @@ import DAO.DaoPedido;
 import Helpers.ValidadorCookie;
 import Model.Cliente;
 import Model.Pedido;
+import Model.Lanche;
+import Model.Bebida;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -128,6 +130,73 @@ public class ComprarTest {
 
         when(daoPedidoMock.pesquisaPorData(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new Pedido());
+
+        new ComprarTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("Pedido Salvo"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new ComprarTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new ComprarTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new ComprarTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
+    }
+
+    @Test
+    public void cookieValidoComLancheEBebidaDeveSalvarPedido() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "ok") };
+
+        String json = "{"
+                + "\"id\":1,"
+                + "\"X-Burger\":[\"X-Burger\",\"lanche\",2],"
+                + "\"Coca-Cola\":[\"Coca-Cola\",\"bebida\",1]"
+                + "}";
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(json));
+        when(validadorMock.validar(cookies)).thenReturn(true);
+
+        Cliente cliente = new Cliente();
+        when(daoClienteMock.pesquisaPorID("1")).thenReturn(cliente);
+
+        Lanche lanche = new Lanche();
+        lanche.setValor_venda(18.0);
+        when(daoLancheMock.pesquisaPorNome("X-Burger")).thenReturn(lanche);
+
+        Bebida bebida = new Bebida();
+        bebida.setValor_venda(6.0);
+        when(daoBebidaMock.pesquisaPorNome("Coca-Cola")).thenReturn(bebida);
+
+        Pedido pedido = new Pedido();
+        when(daoPedidoMock.pesquisaPorData(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(pedido);
 
         new ComprarTestavel().processRequest(request, response);
 
