@@ -20,20 +20,27 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
+// Permite usar Mockito nos testes
 @RunWith(MockitoJUnitRunner.class)
 public class GetRelatorioGastosTest {
 
+    // Mocks das dependências usadas pelo servlet
     @Mock
     private ValidadorCookie validadorMock;
+
     @Mock
     private DaoRelatorio daoRelatorioMock;
+
     @Mock
     private HttpServletRequest request;
+
     @Mock
     private HttpServletResponse response;
 
+    // Guarda a resposta escrita pelo servlet
     private StringWriter respostaHttp;
 
+    // Classe testável para substituir dependências reais por mocks
     private class GetRelatorioGastosTestavel extends getRelatorioGastos {
         @Override
         protected ValidadorCookie criarValidadorCookie() {
@@ -46,13 +53,16 @@ public class GetRelatorioGastosTest {
         }
     }
 
+    // Executa antes de cada teste
     @Before
     public void configurar() throws Exception {
         respostaHttp = new StringWriter();
+
+        // Faz o response escrever dentro da variável respostaHttp
         when(response.getWriter()).thenReturn(new PrintWriter(respostaHttp));
     }
 
-    // Teste 1: Deve consultar o relatório quando o cookie for válido
+    // Testa se cookie válido chama listarRelGastos()
     @Test
     public void cookieValidoDeveChamarListarRelGastos() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
@@ -66,7 +76,7 @@ public class GetRelatorioGastosTest {
         verify(daoRelatorioMock, times(1)).listarRelGastos();
     }
 
-    // Teste 2: Não deve consultar o relatório quando o cookie for inválido
+    // Testa se cookie inválido não chama listarRelGastos()
     @Test
     public void cookieInvalidoNaoDeveChamarListarRelGastos() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -79,7 +89,7 @@ public class GetRelatorioGastosTest {
         verify(daoRelatorioMock, never()).listarRelGastos();
     }
 
-    // Teste 3: Deve retornar mensagem de erro quando acesso for negado
+    // Testa se cookie inválido retorna erro
     @Test
     public void cookieInvalidoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -92,7 +102,7 @@ public class GetRelatorioGastosTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
-    // Teste 4: Não deve retornar erro quando acesso for autorizado
+    // Testa se cookie válido não retorna erro
     @Test
     public void cookieValidoNaoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
@@ -106,7 +116,7 @@ public class GetRelatorioGastosTest {
         assertFalse(respostaHttp.toString().contains("erro"));
     }
 
-    // Teste 5: Deve retornar os dados do relatório em formato JSON
+    // Testa se o JSON retorna os dados do relatório
     @Test
     public void cookieValidoDeveRetornarDadosDoRelatorioEmJson() throws Exception {
         RelatorioGastos relatorio = new RelatorioGastos();
@@ -127,6 +137,7 @@ public class GetRelatorioGastosTest {
         assertTrue(respostaHttp.toString().contains("50.0"));
     }
 
+    // Testa se o doGet chama o processRequest
     @Test
     public void doGetDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -139,6 +150,7 @@ public class GetRelatorioGastosTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa se o doPost chama o processRequest
     @Test
     public void doPostDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -151,10 +163,26 @@ public class GetRelatorioGastosTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa a descrição do servlet
     @Test
     public void deveRetornarDescricaoDoServlet() {
         String descricao = new GetRelatorioGastosTestavel().getServletInfo();
 
         assertTrue(descricao.contains("Short description"));
+    }
+
+    // Testa se o response foi configurado como JSON UTF-8
+    @Test
+    public void deveConfigurarResponseQuandoProcessaRequisicao() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
+        when(daoRelatorioMock.listarRelGastos()).thenReturn(Arrays.asList());
+
+        new GetRelatorioGastosTestavel().processRequest(request, response);
+
+        verify(response, atLeastOnce()).setContentType("application/json");
+        verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
     }
 }
