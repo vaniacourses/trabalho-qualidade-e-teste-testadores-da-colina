@@ -22,21 +22,29 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.atLeastOnce;
 
+// Permite usar Mockito nos testes
 @RunWith(MockitoJUnitRunner.class)
 public class GetBebidasTest {
 
+    // Mocks das dependências usadas pelo servlet
     @Mock
     private ValidadorCookie validadorMock;
+
     @Mock
     private DaoBebida daoBebidaMock;
+
     @Mock
     private HttpServletRequest request;
+
     @Mock
     private HttpServletResponse response;
 
+    // Guarda a resposta escrita pelo servlet
     private StringWriter respostaHttp;
 
+    // Classe testável para substituir dependências reais por mocks
     private class GetBebidasTestavel extends getBebidas {
         @Override
         protected ValidadorCookie criarValidadorCookie() {
@@ -49,16 +57,20 @@ public class GetBebidasTest {
         }
     }
 
+    // Executa antes de cada teste
     @Before
     public void configurar() throws Exception {
         respostaHttp = new StringWriter();
+
+        // Faz o response escrever dentro da variável respostaHttp
         when(response.getWriter()).thenReturn(new PrintWriter(respostaHttp));
     }
 
-    // Teste 1: cookie válido deve chamar listarTodos() uma vez
+    // Testa se cookie válido chama listarTodos()
     @Test
     public void cookieValidoDeveChamarListarTodos() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
         when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList());
@@ -68,10 +80,11 @@ public class GetBebidasTest {
         verify(daoBebidaMock, times(1)).listarTodos();
     }
 
-    // Teste 2: cookie inválido NÃO deve chamar listarTodos()
+    // Testa se cookie inválido não chama listarTodos()
     @Test
     public void cookieInvalidoNaoDeveChamarListarTodos() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
 
@@ -80,10 +93,11 @@ public class GetBebidasTest {
         verify(daoBebidaMock, never()).listarTodos();
     }
 
-    // Teste 3: cookie inválido deve retornar a mensagem "erro"
+    // Testa se cookie inválido retorna erro
     @Test
     public void cookieInvalidoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
 
@@ -92,10 +106,11 @@ public class GetBebidasTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
-    // Teste 4: cookie válido NÃO deve retornar a mensagem "erro"
+    // Testa se cookie válido não retorna erro
     @Test
     public void cookieValidoNaoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
         when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList());
@@ -105,13 +120,14 @@ public class GetBebidasTest {
         assertFalse(respostaHttp.toString().contains("erro"));
     }
 
-    // Teste 5: cookie válido deve retornar o nome da bebida no JSON
+    // Testa se o JSON retorna o nome da bebida
     @Test
     public void cookieValidoDeveRetornarNomeDaBebida() throws Exception {
         Bebida bebida = new Bebida();
         bebida.setNome("Coca-Cola");
 
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
         when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList(bebida));
@@ -121,6 +137,7 @@ public class GetBebidasTest {
         assertTrue(respostaHttp.toString().contains("Coca-Cola"));
     }
 
+    // Testa se o doGet chama o processRequest
     @Test
     public void doGetDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -133,6 +150,7 @@ public class GetBebidasTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa se o doPost chama o processRequest
     @Test
     public void doPostDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
@@ -145,10 +163,26 @@ public class GetBebidasTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa a descrição do servlet
     @Test
     public void deveRetornarDescricaoDoServlet() {
         String descricao = new GetBebidasTestavel().getServletInfo();
 
         assertTrue(descricao.contains("Short description"));
+    }
+
+    // Testa se o response foi configurado como JSON UTF-8
+    @Test
+    public void deveConfigurarResponseQuandoProcessaRequisicao() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
+        when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList());
+
+        new GetBebidasTestavel().processRequest(request, response);
+
+        verify(response, atLeastOnce()).setContentType("application/json");
+        verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
     }
 }
