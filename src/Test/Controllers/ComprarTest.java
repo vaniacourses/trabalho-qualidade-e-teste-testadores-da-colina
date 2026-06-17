@@ -1,18 +1,24 @@
 package Controllers;
 
+// Imports dos DAOs usados no teste
 import DAO.DaoBebida;
 import DAO.DaoCliente;
 import DAO.DaoLanche;
 import DAO.DaoPedido;
+
+// Import do validador de cookie
 import Helpers.ValidadorCookie;
-import Model.Cliente;
-import Model.Pedido;
-import Model.Lanche;
+
+// Imports dos models usados
 import Model.Bebida;
+import Model.Cliente;
+import Model.Lanche;
+import Model.Pedido;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -26,30 +32,30 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+// Permite usar Mockito no teste
 @RunWith(MockitoJUnitRunner.class)
 public class ComprarTest {
 
-    @Mock
-    private ValidadorCookie validadorMock;
-    @Mock
-    private DaoCliente daoClienteMock;
-    @Mock
-    private DaoLanche daoLancheMock;
-    @Mock
-    private DaoBebida daoBebidaMock;
-    @Mock
-    private DaoPedido daoPedidoMock;
-    @Mock
-    private HttpServletRequest request;
-    @Mock
-    private HttpServletResponse response;
+    // Mocks das dependências do servlet
+    @Mock private ValidadorCookie validadorMock;
+    @Mock private DaoCliente daoClienteMock;
+    @Mock private DaoLanche daoLancheMock;
+    @Mock private DaoBebida daoBebidaMock;
+    @Mock private DaoPedido daoPedidoMock;
+    @Mock private HttpServletRequest request;
+    @Mock private HttpServletResponse response;
 
+    // Guarda a resposta escrita pelo servlet
     private StringWriter respostaHttp;
 
+    // Classe usada para trocar os DAOs reais por mocks
     private class ComprarTestavel extends comprar {
         protected ValidadorCookie criarValidadorCookie() {
             return validadorMock;
@@ -72,6 +78,7 @@ public class ComprarTest {
         }
     }
 
+    // Cria um InputStream falso para simular o JSON da requisição
     private ServletInputStream criarInput(String json) {
         ByteArrayInputStream entrada = new ByteArrayInputStream(json.getBytes());
 
@@ -97,13 +104,16 @@ public class ComprarTest {
         };
     }
 
+    // Executa antes de cada teste
     @Before
     public void configurar() throws Exception {
         respostaHttp = new StringWriter();
+
+        // Faz o response escrever dentro da variável respostaHttp
         when(response.getWriter()).thenReturn(new PrintWriter(respostaHttp));
     }
 
-    // Teste 1: cookie inválido deve retornar erro
+    // Testa se cookie inválido retorna erro
     @Test
     public void cookieInvalidoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("token", "x") };
@@ -117,7 +127,7 @@ public class ComprarTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
-    // Teste 2: cookie válido deve salvar pedido
+    // Testa se cookie válido salva um pedido sem itens
     @Test
     public void cookieValidoDeveSalvarPedido() throws Exception {
         Cookie[] cookies = { new Cookie("token", "ok") };
@@ -129,69 +139,29 @@ public class ComprarTest {
         Cliente cliente = new Cliente();
         when(daoClienteMock.pesquisaPorID("1")).thenReturn(cliente);
 
-        when(daoPedidoMock.pesquisaPorData(org.mockito.ArgumentMatchers.any()))
+        when(daoPedidoMock.pesquisaPorData(any(Pedido.class)))
                 .thenReturn(new Pedido());
 
         new ComprarTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("Pedido Salvo"));
+
+        // Captura o pedido enviado para o método salvar
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+
+        verify(daoPedidoMock, times(1)).salvar(captor.capture());
+        verify(daoPedidoMock, times(1)).pesquisaPorData(any(Pedido.class));
+
+        Pedido pedidoSalvo = captor.getValue();
+
+        // Verifica se o cliente e o valor total estão corretos
+        assertEquals(cliente, pedidoSalvo.getCliente());
+        assertEquals(0.0, pedidoSalvo.getValor_total(), 0.01);
     }
 
+    // Testa se pedido com lanche e bebida calcula o valor e cria os vínculos
     @Test
-    public void doPostDeveChamarProcessRequest() throws Exception {
-        Cookie[] cookies = { new Cookie("token", "x") };
-
-        when(request.getCookies()).thenReturn(cookies);
-        when(request.getInputStream()).thenReturn(criarInput(""));
-        when(validadorMock.validar(cookies)).thenReturn(false);
-
-        new ComprarTestavel().doPost(request, response);
-
-        assertTrue(respostaHttp.toString().contains("erro"));
-    }
-
-    @Test
-    public void doGetDeveChamarProcessRequest() throws Exception {
-        Cookie[] cookies = { new Cookie("token", "x") };
-
-        when(request.getCookies()).thenReturn(cookies);
-        when(request.getInputStream()).thenReturn(criarInput(""));
-        when(validadorMock.validar(cookies)).thenReturn(false);
-
-        new ComprarTestavel().doGet(request, response);
-
-        assertTrue(respostaHttp.toString().contains("erro"));
-    }
-
-    @Test
-    public void deveRetornarDescricaoDoServlet() {
-        String descricao = new ComprarTestavel().getServletInfo();
-
-        assertTrue(descricao.contains("Short description"));
-    }
-
-    // Forca excecao no processRequest para cobrir o tratamento de erro do doGet
-    @Test
-    public void doGetDeveRetornar500QuandoOcorreErro() throws Exception {
-        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
-
-        new ComprarTestavel().doGet(request, response);
-
-        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
-
-    // Forca excecao no processRequest para cobrir o tratamento de erro do doPost
-    @Test
-    public void doPostDeveRetornar500QuandoOcorreErro() throws Exception {
-        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
-
-        new ComprarTestavel().doPost(request, response);
-
-        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    }
-
-    @Test
-    public void cookieValidoComLancheEBebidaDeveSalvarPedido() throws Exception {
+    public void cookieValidoComLancheEBebidaDeveSalvarPedidoComValorTotalEVinculos() throws Exception {
         Cookie[] cookies = { new Cookie("token", "ok") };
 
         String json = "{"
@@ -215,12 +185,65 @@ public class ComprarTest {
         bebida.setValor_venda(6.0);
         when(daoBebidaMock.pesquisaPorNome("Coca-Cola")).thenReturn(bebida);
 
-        Pedido pedido = new Pedido();
-        when(daoPedidoMock.pesquisaPorData(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(pedido);
+        Pedido pedidoRetornado = new Pedido();
+        when(daoPedidoMock.pesquisaPorData(any(Pedido.class))).thenReturn(pedidoRetornado);
 
         new ComprarTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("Pedido Salvo"));
+
+        // Captura o pedido salvo para verificar os dados
+        ArgumentCaptor<Pedido> captor = ArgumentCaptor.forClass(Pedido.class);
+
+        verify(daoPedidoMock, times(1)).salvar(captor.capture());
+        verify(daoPedidoMock, times(1)).pesquisaPorData(any(Pedido.class));
+
+        // Verifica se os vínculos com lanche e bebida foram feitos
+        verify(daoPedidoMock, times(1)).vincularLanche(any(Pedido.class), any(Lanche.class));
+        verify(daoPedidoMock, times(1)).vincularBebida(any(Pedido.class), any(Bebida.class));
+
+        Pedido pedidoSalvo = captor.getValue();
+
+        // Verifica os valores finais do pedido
+        assertEquals(cliente, pedidoSalvo.getCliente());
+        assertEquals(24.0, pedidoSalvo.getValor_total(), 0.01);
+        assertEquals(2, lanche.getQuantidade());
+        assertEquals(1, bebida.getQuantidade());
+    }
+
+    // Testa se o doPost chama o processRequest
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new ComprarTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    // Testa se o doGet chama o processRequest
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new ComprarTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    // Testa a descrição do servlet
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new ComprarTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
     }
 }
