@@ -8,6 +8,7 @@ import Model.Lanche;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -21,25 +22,37 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+// Permite usar Mockito no teste
 @RunWith(MockitoJUnitRunner.class)
 public class SalvarLancheClienteTest {
 
+    // Mocks das dependências usadas pelo servlet
     @Mock
     private ValidadorCookie validadorMock;
+
     @Mock
     private DaoIngrediente daoIngredienteMock;
+
     @Mock
     private DaoLanche daoLancheMock;
+
     @Mock
     private HttpServletRequest request;
+
     @Mock
     private HttpServletResponse response;
 
+    // Guarda a resposta escrita pelo servlet
     private StringWriter respostaHttp;
 
+    // Classe testável para substituir dependências reais por mocks
     private class SalvarLancheTestavel extends salvarLancheCliente {
         protected ValidadorCookie criarValidadorCookie() {
             return validadorMock;
@@ -54,6 +67,7 @@ public class SalvarLancheClienteTest {
         }
     }
 
+    // Cria um input falso para simular o JSON da requisição
     private ServletInputStream criarInput(String json) {
         ByteArrayInputStream entrada = new ByteArrayInputStream(json.getBytes());
 
@@ -79,12 +93,16 @@ public class SalvarLancheClienteTest {
         };
     }
 
+    // Executa antes de cada teste
     @Before
     public void configurar() throws Exception {
         respostaHttp = new StringWriter();
+
+        // Faz o response escrever dentro da variável respostaHttp
         when(response.getWriter()).thenReturn(new PrintWriter(respostaHttp));
     }
 
+    // Testa se cookie inválido retorna erro
     @Test
     public void cookieInvalidoDeveRetornarErro() throws Exception {
         Cookie[] cookies = { new Cookie("token", "x") };
@@ -98,6 +116,18 @@ public class SalvarLancheClienteTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa se a ausência de cookie retorna erro
+    @Test
+    public void semCookieDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+
+        new SalvarLancheTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    // Testa se cookie válido salva lanche com um ingrediente
     @Test
     public void cookieValidoDeveRetornarCarrinho() throws Exception {
         Cookie[] cookies = { new Cookie("token", "ok") };
@@ -111,36 +141,39 @@ public class SalvarLancheClienteTest {
         Ingrediente ingrediente = new Ingrediente();
         ingrediente.setValor_venda(5.0);
 
-        when(daoIngredienteMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Ingrediente.class)))
+        // Retorna o ingrediente quando ele for pesquisado
+        when(daoIngredienteMock.pesquisaPorNome(any(Ingrediente.class)))
                 .thenReturn(ingrediente);
 
         Lanche lanche = new Lanche();
-        lanche.setNome("X");
-        lanche.setValor_venda(5.0);
 
-        when(daoLancheMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Lanche.class)))
+        // Retorna o lanche quando ele for pesquisado
+        when(daoLancheMock.pesquisaPorNome(any(Lanche.class)))
                 .thenReturn(lanche);
 
         new SalvarLancheTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("carrinho"));
+
+        // Captura o lanche enviado para salvarCliente
+        ArgumentCaptor<Lanche> captorLanche = ArgumentCaptor.forClass(Lanche.class);
+
+        verify(daoLancheMock, times(1)).salvarCliente(captorLanche.capture());
+
+        Lanche lancheSalvo = captorLanche.getValue();
+
+        // Verifica se os dados do lanche foram preenchidos corretamente
+        assertEquals("X", lancheSalvo.getNome());
+        assertEquals("Teste", lancheSalvo.getDescricao());
+        assertEquals(5.0, lancheSalvo.getValor_venda(), 0.01);
     }
 
-    @Test
-    public void semCookieDeveRetornarErro() throws Exception {
-        when(request.getCookies()).thenReturn(null);
-        when(request.getInputStream()).thenReturn(criarInput(""));
-
-        new SalvarLancheTestavel().processRequest(request, response);
-
-        assertTrue(respostaHttp.toString().contains("erro"));
-    }
-
+    // Testa se cookie válido salva lanche com dois ingredientes
     @Test
     public void cookieValidoComDoisIngredientesDeveRetornarCarrinho() throws Exception {
         Cookie[] cookies = { new Cookie("token", "ok") };
 
-        String json = "{\"nome\":\"X-Tudo\",\"descricao\":\"Teste\",\"ingredientes\":{\"Queijo\":1,\"Bacon\":1}}";
+        String json = "{\"nome\":\"X-Tudo\",\"descricao\":\"Teste\",\"ingredientes\":{\"Queijo\":1,\"Bacon\":2}}";
 
         when(request.getCookies()).thenReturn(cookies);
         when(request.getInputStream()).thenReturn(criarInput(json));
@@ -149,21 +182,35 @@ public class SalvarLancheClienteTest {
         Ingrediente ingrediente = new Ingrediente();
         ingrediente.setValor_venda(5.0);
 
-        when(daoIngredienteMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Ingrediente.class)))
+        // Simula a busca de ingredientes pelo DAO
+        when(daoIngredienteMock.pesquisaPorNome(any(Ingrediente.class)))
                 .thenReturn(ingrediente);
 
         Lanche lanche = new Lanche();
-        lanche.setNome("X-Tudo");
-        lanche.setValor_venda(10.0);
 
-        when(daoLancheMock.pesquisaPorNome(org.mockito.ArgumentMatchers.any(Lanche.class)))
+        // Simula a busca do lanche salvo
+        when(daoLancheMock.pesquisaPorNome(any(Lanche.class)))
                 .thenReturn(lanche);
 
         new SalvarLancheTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("carrinho"));
+
+        // Captura o lanche salvo
+        ArgumentCaptor<Lanche> captorLanche = ArgumentCaptor.forClass(Lanche.class);
+
+        verify(daoLancheMock, times(1)).salvarCliente(captorLanche.capture());
+        verify(daoLancheMock, times(1)).pesquisaPorNome(any(Lanche.class));
+
+        Lanche lancheSalvo = captorLanche.getValue();
+
+        // Verifica se o valor total foi calculado corretamente
+        assertEquals("X-Tudo", lancheSalvo.getNome());
+        assertEquals("Teste", lancheSalvo.getDescricao());
+        assertEquals(15.0, lancheSalvo.getValor_venda(), 0.01);
     }
 
+    // Testa se o doPost chama o processRequest
     @Test
     public void doPostDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("token", "x") };
@@ -177,6 +224,7 @@ public class SalvarLancheClienteTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa se o doGet chama o processRequest
     @Test
     public void doGetDeveChamarProcessRequest() throws Exception {
         Cookie[] cookies = { new Cookie("token", "x") };
@@ -190,6 +238,7 @@ public class SalvarLancheClienteTest {
         assertTrue(respostaHttp.toString().contains("erro"));
     }
 
+    // Testa a descrição do servlet
     @Test
     public void deveRetornarDescricaoDoServlet() {
         String descricao = new SalvarLancheTestavel().getServletInfo();
