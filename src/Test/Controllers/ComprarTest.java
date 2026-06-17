@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -167,6 +168,26 @@ public class ComprarTest {
         String descricao = new ComprarTestavel().getServletInfo();
 
         assertTrue(descricao.contains("Short description"));
+    }
+
+    // Forca excecao no processRequest para cobrir o tratamento de erro do doGet
+    @Test
+    public void doGetDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
+
+        new ComprarTestavel().doGet(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    // Forca excecao no processRequest para cobrir o tratamento de erro do doPost
+    @Test
+    public void doPostDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
+
+        new ComprarTestavel().doPost(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     @Test

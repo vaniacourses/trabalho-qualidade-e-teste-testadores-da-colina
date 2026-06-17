@@ -12,6 +12,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -169,6 +170,26 @@ public class GetRelatorioGastosTest {
         String descricao = new GetRelatorioGastosTestavel().getServletInfo();
 
         assertTrue(descricao.contains("Short description"));
+    }
+
+    // Forca excecao no processRequest para cobrir o tratamento de erro do doGet
+    @Test
+    public void doGetDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(response.getWriter()).thenThrow(new IOException("falha simulada"));
+
+        new GetRelatorioGastosTestavel().doGet(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    // Forca excecao no processRequest para cobrir o tratamento de erro do doPost
+    @Test
+    public void doPostDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(response.getWriter()).thenThrow(new IOException("falha simulada"));
+
+        new GetRelatorioGastosTestavel().doPost(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
     // Testa se o response foi configurado como JSON UTF-8
