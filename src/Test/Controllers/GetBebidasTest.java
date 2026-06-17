@@ -26,18 +26,27 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class GetBebidasTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoBebida daoBebidaMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoBebida daoBebidaMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
     private class GetBebidasTestavel extends getBebidas {
         @Override
-        protected ValidadorCookie criarValidadorCookie() { return validadorMock; }
+        protected ValidadorCookie criarValidadorCookie() {
+            return validadorMock;
+        }
+
         @Override
-        protected DaoBebida criarDaoBebida() { return daoBebidaMock; }
+        protected DaoBebida criarDaoBebida() {
+            return daoBebidaMock;
+        }
     }
 
     @Before
@@ -110,5 +119,36 @@ public class GetBebidasTest {
         new GetBebidasTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("Coca-Cola"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetBebidasTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetBebidasTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new GetBebidasTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
     }
 }
