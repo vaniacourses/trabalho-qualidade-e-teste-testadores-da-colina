@@ -23,10 +23,14 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class GetRelatorioGastosTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoRelatorio daoRelatorioMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoRelatorio daoRelatorioMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
@@ -47,7 +51,7 @@ public class GetRelatorioGastosTest {
         respostaHttp = new StringWriter();
         when(response.getWriter()).thenReturn(new PrintWriter(respostaHttp));
     }
-    
+
     // Teste 1: Deve consultar o relatório quando o cookie for válido
     @Test
     public void cookieValidoDeveChamarListarRelGastos() throws Exception {
@@ -61,7 +65,7 @@ public class GetRelatorioGastosTest {
 
         verify(daoRelatorioMock, times(1)).listarRelGastos();
     }
-    
+
     // Teste 2: Não deve consultar o relatório quando o cookie for inválido
     @Test
     public void cookieInvalidoNaoDeveChamarListarRelGastos() throws Exception {
@@ -74,7 +78,7 @@ public class GetRelatorioGastosTest {
 
         verify(daoRelatorioMock, never()).listarRelGastos();
     }
-    
+
     // Teste 3: Deve retornar mensagem de erro quando acesso for negado
     @Test
     public void cookieInvalidoDeveRetornarErro() throws Exception {
@@ -87,6 +91,7 @@ public class GetRelatorioGastosTest {
 
         assertTrue(respostaHttp.toString().contains("erro"));
     }
+
     // Teste 4: Não deve retornar erro quando acesso for autorizado
     @Test
     public void cookieValidoNaoDeveRetornarErro() throws Exception {
@@ -100,6 +105,7 @@ public class GetRelatorioGastosTest {
 
         assertFalse(respostaHttp.toString().contains("erro"));
     }
+
     // Teste 5: Deve retornar os dados do relatório em formato JSON
     @Test
     public void cookieValidoDeveRetornarDadosDoRelatorioEmJson() throws Exception {
@@ -119,5 +125,36 @@ public class GetRelatorioGastosTest {
         assertTrue(respostaHttp.toString().contains("100.0"));
         assertTrue(respostaHttp.toString().contains("150.0"));
         assertTrue(respostaHttp.toString().contains("50.0"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetRelatorioGastosTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new GetRelatorioGastosTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new GetRelatorioGastosTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
     }
 }
