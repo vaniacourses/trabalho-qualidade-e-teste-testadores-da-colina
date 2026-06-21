@@ -14,7 +14,7 @@ Sistema sob teste: **Lanchonete Online ("Cade Burger's")**.
 | 🐞 **Defeitos** (bug tracker) | [GitHub Issues](../../issues) |
 | 📝 **Documento de Bugs/Issues** (Google Docs) | [Abrir documento](https://docs.google.com/document/d/1hVdckAPw-DxUisKo2MTNSwM5CSh48TGALNI98EbPlsM/edit?usp=sharing) |
 | ✅ **Evidências de teste manual** (TestLink) | Disponíveis na seção *Testes Manuais* do Plano de Testes |
-|📝 **Slides Apresentação Final** (Google Slides)|[Abrir documento](https://docs.google.com/presentation/d/1MR_VXEHfujO1tJfOItX4JR9kr9FrMEhr-oogWTmhhVk/edit?usp=sharing)|
+|📝 **Slides Apresentação Final** (Google Slides)|[Abrir documento](https://docs.google.com/presentation/d/1DJaq9766klH-l0aILemXVTwcEMUgnv21Nz4_2US03Pc/edit?usp=sharing)|
 
 ### Casos de teste unitários
 Os testes cobrem controllers com lógica não-trivial (autenticação, fluxo de compra e montagem de lanche):
