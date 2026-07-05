@@ -95,17 +95,22 @@ public class salvarLancheCliente extends HttpServlet {
 
             Lanche lancheComID = lancheDao.pesquisaPorNome(lanche);
 
-            while (keys.hasNext()) {
+            // Recria o iterator, pois o anterior já foi consumido
+            keys = ingredientes.keys();
 
+            while (keys.hasNext()) {
                 String key = keys.next();
+
                 Ingrediente ingredienteLanche = new Ingrediente();
                 ingredienteLanche.setNome(key);
 
                 Ingrediente ingredienteComID = ingredienteDao.pesquisaPorNome(ingredienteLanche);
-                ingredienteComID.setQuantidade(ingredientes.getInt(key));
+
+                int quantidade = ingredientes.getInt(key);
+                ingredienteComID.setQuantidade(quantidade);
+
                 lancheDao.vincularIngrediente(lancheComID, ingredienteComID);
             }
-
             try (PrintWriter out = response.getWriter()) {
                 out.println("../carrinho/carrinho.html?nome=" + String.valueOf(lancheComID.getNome()) + "&preco="
                         + String.valueOf(lancheComID.getValor_venda()));

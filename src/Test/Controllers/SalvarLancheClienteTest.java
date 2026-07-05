@@ -201,6 +201,9 @@ public class SalvarLancheClienteTest {
 
         verify(daoLancheMock, times(1)).salvarCliente(captorLanche.capture());
         verify(daoLancheMock, times(1)).pesquisaPorNome(any(Lanche.class));
+        // Verifica se os dois ingredientes foram vinculados ao lanche
+        verify(daoLancheMock, times(2))
+                .vincularIngrediente(any(Lanche.class), any(Ingrediente.class));
 
         Lanche lancheSalvo = captorLanche.getValue();
 
