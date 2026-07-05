@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 
 public class CadastroTest {
 
+    // Retorna um JSON válido para simular o cadastro de um cliente
     private String jsonCadastroValido() {
         return "{"
                 + "\"usuario\":{"
@@ -38,6 +39,7 @@ public class CadastroTest {
                 + "}";
     }
 
+    // Testa se um usuário é cadastrado com sucesso
     @Test
     public void deveCadastrarUsuarioComSucesso() throws Exception {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -65,6 +67,7 @@ public class CadastroTest {
         assertTrue(resposta.toString().contains("Usuário Cadastrado!"));
     }
 
+    // Testa se os dados do JSON são convertidos corretamente para o objeto Cliente
     @Test
     public void deveMontarClienteComDadosDoJson() throws Exception {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -105,5 +108,71 @@ public class CadastroTest {
         assertEquals("Apto 1", clienteSalvo.getEndereco().getComplemento());
         assertEquals("Rua A", clienteSalvo.getEndereco().getRua());
         assertEquals(10, clienteSalvo.getEndereco().getNumero());
+    }
+
+    // Testa se o método doGet chama o processRequest corretamente
+    @Test
+    public void doGetDeveCadastrarUsuarioComSucesso() throws Exception {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        DaoCliente daoMock = Mockito.mock(DaoCliente.class);
+
+        StringWriter resposta = new StringWriter();
+        PrintWriter writer = new PrintWriter(resposta);
+
+        when(request.getInputStream()).thenReturn(new ServletInputStreamFake(jsonCadastroValido()));
+        when(response.getWriter()).thenReturn(writer);
+
+        cadastro servlet = new cadastro() {
+            @Override
+            protected DaoCliente criarDaoCliente() {
+                return daoMock;
+            }
+        };
+
+        servlet.doGet(request, response);
+
+        verify(daoMock).salvar(any(Cliente.class));
+
+        writer.flush();
+        assertTrue(resposta.toString().contains("Usuário Cadastrado!"));
+    }
+
+    // Testa se o servlet retorna a descrição esperada
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        cadastro servlet = new cadastro();
+
+        String descricao = servlet.getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
+    }
+
+    // Testa o comportamento quando a requisição não possui corpo
+    @Test
+    public void semCorpoNaRequisicaoDeveRetornarMensagemSemSalvar() throws Exception {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        DaoCliente daoMock = Mockito.mock(DaoCliente.class);
+
+        StringWriter resposta = new StringWriter();
+        PrintWriter writer = new PrintWriter(resposta);
+
+        when(request.getInputStream()).thenReturn(null);
+        when(response.getWriter()).thenReturn(writer);
+
+        cadastro servlet = new cadastro() {
+            @Override
+            protected DaoCliente criarDaoCliente() {
+                return daoMock;
+            }
+        };
+
+        servlet.doPost(request, response);
+
+        verify(daoMock, never()).salvar(any(Cliente.class));
+
+        writer.flush();
+        assertTrue(resposta.toString().contains("Usuário Cadastrado!"));
     }
 }
