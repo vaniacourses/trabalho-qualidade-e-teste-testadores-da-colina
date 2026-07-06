@@ -17,6 +17,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -184,5 +185,45 @@ public class GetLanchesTest {
 
         verify(response, atLeastOnce()).setContentType("application/json");
         verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
+    }
+
+    // Testa o caso sem cookie, cobrindo o tratamento de erro
+    @Test
+    public void semCookieDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+
+        new GetLanchesTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+        verify(daoLancheMock, never()).listarTodos();
+    }
+
+    @Test
+    public void cookieValidoDeveExecutarFlushNaResposta() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+        PrintWriter writerMock = org.mockito.Mockito.mock(PrintWriter.class);
+
+        when(response.getWriter()).thenReturn(writerMock);
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
+        when(daoLancheMock.listarTodos()).thenReturn(Arrays.asList());
+
+        new GetLanchesTestavel().processRequest(request, response);
+
+        verify(writerMock).flush();
+    }
+
+    @Test
+    public void criarDaoLancheNaoDeveRetornarNulo() {
+        GetLanchesTestavel servlet = new GetLanchesTestavel();
+
+        assertNotNull(servlet.criarDaoLanche());
+    }
+
+    @Test
+    public void criarValidadorNaoDeveRetornarNulo() {
+        GetLanchesTestavel servlet = new GetLanchesTestavel();
+
+        assertNotNull(servlet.criarValidadorCookie());
     }
 }

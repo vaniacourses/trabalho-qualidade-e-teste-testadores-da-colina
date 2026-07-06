@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -140,7 +141,7 @@ public class GetRelatorioGastosTest {
 
     // Testa se o doGet chama o processRequest
     @Test
-    public void doGetDeveChamarProcessRequest(){
+    public void doGetDeveChamarProcessRequest() {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
 
         when(request.getCookies()).thenReturn(cookies);
@@ -153,7 +154,7 @@ public class GetRelatorioGastosTest {
 
     // Testa se o doPost chama o processRequest
     @Test
-    public void doPostDeveChamarProcessRequest(){
+    public void doPostDeveChamarProcessRequest() {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "invalido") };
 
         when(request.getCookies()).thenReturn(cookies);
@@ -205,5 +206,35 @@ public class GetRelatorioGastosTest {
 
         verify(response, atLeastOnce()).setContentType("application/json");
         verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
+    }
+
+    // Testa se o flush é executado ao retornar o relatório com sucesso
+    @Test
+    public void cookieValidoDeveExecutarFlushNaResposta() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+        PrintWriter writerMock = mock(PrintWriter.class);
+
+        when(response.getWriter()).thenReturn(writerMock);
+        when(request.getCookies()).thenReturn(cookies);
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
+        when(daoRelatorioMock.listarRelGastos()).thenReturn(Arrays.asList());
+
+        new GetRelatorioGastosTestavel().processRequest(request, response);
+
+        verify(writerMock).flush();
+    }
+
+    @Test
+    public void criarDaoRelatorioNaoDeveRetornarNulo() {
+        GetRelatorioGastosTestavel servlet = new GetRelatorioGastosTestavel();
+
+        assertNotNull(servlet.criarDaoRelatorio());
+    }
+
+    @Test
+    public void criarValidadorNaoDeveRetornarNulo() {
+        GetRelatorioGastosTestavel servlet = new GetRelatorioGastosTestavel();
+
+        assertNotNull(servlet.criarValidadorCookie());
     }
 }

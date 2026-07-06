@@ -15,11 +15,13 @@ import java.io.PrintWriter;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
+import javax.servlet.ServletInputStream;
 
 /**
  *
@@ -41,7 +43,16 @@ public class salvarIngrediente extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+
+        ServletInputStream inputStream = request.getInputStream();
+
+        BufferedReader br = null;
+
+        // Só cria o BufferedReader se existir corpo na requisição
+        if (inputStream != null) {
+            br = new BufferedReader(new InputStreamReader(inputStream));
+        }
+
         String json = "";
 
         //////// Validar Cookie

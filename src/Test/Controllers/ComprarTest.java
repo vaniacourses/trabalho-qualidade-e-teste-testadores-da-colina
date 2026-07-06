@@ -34,6 +34,7 @@ import java.io.StringWriter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,13 +45,20 @@ import static org.mockito.Mockito.when;
 public class ComprarTest {
 
     // Mocks das dependências do servlet
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoCliente daoClienteMock;
-    @Mock private DaoLanche daoLancheMock;
-    @Mock private DaoBebida daoBebidaMock;
-    @Mock private DaoPedido daoPedidoMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoCliente daoClienteMock;
+    @Mock
+    private DaoLanche daoLancheMock;
+    @Mock
+    private DaoBebida daoBebidaMock;
+    @Mock
+    private DaoPedido daoPedidoMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     // Guarda a resposta escrita pelo servlet
     private StringWriter respostaHttp;
@@ -139,9 +147,10 @@ public class ComprarTest {
         Cliente cliente = new Cliente();
         when(daoClienteMock.pesquisaPorID("1")).thenReturn(cliente);
 
-        when(daoPedidoMock.pesquisaPorData(any(Pedido.class)))
-                .thenReturn(new Pedido());
+        Pedido pedidoRetornado = new Pedido();
 
+        when(daoPedidoMock.pesquisaPorData(any(Pedido.class)))
+                .thenReturn(pedidoRetornado);
         new ComprarTestavel().processRequest(request, response);
 
         assertTrue(respostaHttp.toString().contains("Pedido Salvo"));
@@ -157,6 +166,8 @@ public class ComprarTest {
         // Verifica se o cliente e o valor total estão corretos
         assertEquals(cliente, pedidoSalvo.getCliente());
         assertEquals(0.0, pedidoSalvo.getValor_total(), 0.01);
+        assertNotNull(pedidoSalvo.getData_pedido());
+        assertEquals(cliente, pedidoRetornado.getCliente());
     }
 
     // Testa se pedido com lanche e bebida calcula o valor e cria os vínculos
@@ -209,6 +220,7 @@ public class ComprarTest {
         assertEquals(24.0, pedidoSalvo.getValor_total(), 0.01);
         assertEquals(2, lanche.getQuantidade());
         assertEquals(1, bebida.getQuantidade());
+        assertEquals(cliente, pedidoRetornado.getCliente());
     }
 
     // Testa se o doPost chama o processRequest
@@ -245,5 +257,37 @@ public class ComprarTest {
         String descricao = new ComprarTestavel().getServletInfo();
 
         assertTrue(descricao.contains("Short description"));
+    }
+
+    @Test
+    public void deveConfigurarResponseQuandoProcessaRequisicao() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new ComprarTestavel().processRequest(request, response);
+
+        verify(response).setContentType("application/json");
+        verify(response).setCharacterEncoding("UTF-8");
+    }
+
+    @Test
+    public void doGetDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
+
+        new ComprarTestavel().doGet(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    @Test
+    public void doPostDeveRetornar500QuandoOcorreErro() throws Exception {
+        when(request.getInputStream()).thenThrow(new IOException("falha simulada"));
+
+        new ComprarTestavel().doPost(request, response);
+
+        verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 }

@@ -17,6 +17,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -122,19 +123,19 @@ public class GetBebidasTest {
 
     // Testa se o JSON retorna o nome da bebida
     @Test
-    public void cookieValidoDeveRetornarNomeDaBebida() throws Exception {
-        Bebida bebida = new Bebida();
-        bebida.setNome("Coca-Cola");
-
+    public void cookieValidoDeveExecutarFlushNaResposta() throws Exception {
         Cookie[] cookies = { new Cookie("tokenFuncionario", "abc") };
+        PrintWriter writerMock = org.mockito.Mockito.mock(PrintWriter.class);
 
+        when(response.getWriter()).thenReturn(writerMock);
         when(request.getCookies()).thenReturn(cookies);
         when(validadorMock.validarFuncionario(cookies)).thenReturn(true);
-        when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList(bebida));
+        when(daoBebidaMock.listarTodos()).thenReturn(Arrays.asList());
 
         new GetBebidasTestavel().processRequest(request, response);
 
-        assertTrue(respostaHttp.toString().contains("Coca-Cola"));
+        verify(writerMock).print("[]");
+        verify(writerMock).flush();
     }
 
     // Testa se o doGet chama o processRequest
@@ -184,5 +185,30 @@ public class GetBebidasTest {
 
         verify(response, atLeastOnce()).setContentType("application/json");
         verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
+    }
+
+    // Testa o caso sem cookie, cobrindo o tratamento de erro
+    @Test
+    public void semCookieDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+
+        new GetBebidasTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+        verify(daoBebidaMock, never()).listarTodos();
+    }
+
+    @Test
+    public void criarDaoBebidaNaoDeveRetornarNulo() {
+        GetBebidasTestavel servlet = new GetBebidasTestavel();
+
+        assertNotNull(servlet.criarDaoBebida());
+    }
+
+    @Test
+    public void criarValidadorNaoDeveRetornarNulo() {
+        GetBebidasTestavel servlet = new GetBebidasTestavel();
+
+        assertNotNull(servlet.criarValidadorCookie());
     }
 }

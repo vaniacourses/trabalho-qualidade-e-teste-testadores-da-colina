@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import static org.junit.Assert.assertNotNull;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -21,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.atLeastOnce;
 
 // Permite usar Mockito no teste
 @RunWith(MockitoJUnitRunner.class)
@@ -138,12 +141,14 @@ public class SalvarLancheClienteTest {
         when(request.getInputStream()).thenReturn(criarInput(json));
         when(validadorMock.validar(cookies)).thenReturn(true);
 
-        Ingrediente ingrediente = new Ingrediente();
-        ingrediente.setValor_venda(5.0);
+        Ingrediente queijo = new Ingrediente();
+        queijo.setValor_venda(5.0);
 
-        // Retorna o ingrediente quando ele for pesquisado
+        Ingrediente bacon = new Ingrediente();
+        bacon.setValor_venda(5.0);
+
         when(daoIngredienteMock.pesquisaPorNome(any(Ingrediente.class)))
-                .thenReturn(ingrediente);
+                .thenReturn(queijo, bacon, queijo, bacon);
 
         Lanche lanche = new Lanche();
 
@@ -152,6 +157,16 @@ public class SalvarLancheClienteTest {
                 .thenReturn(lanche);
 
         new SalvarLancheTestavel().processRequest(request, response);
+
+        ArgumentCaptor<Ingrediente> captor = ArgumentCaptor.forClass(Ingrediente.class);
+
+        verify(daoIngredienteMock, times(2))
+                .pesquisaPorNome(captor.capture());
+
+        List<Ingrediente> pesquisados = captor.getAllValues();
+
+        assertTrue(
+                pesquisados.stream().anyMatch(i -> "Queijo".equals(i.getNome())));
 
         assertTrue(respostaHttp.toString().contains("carrinho"));
 
@@ -179,12 +194,26 @@ public class SalvarLancheClienteTest {
         when(request.getInputStream()).thenReturn(criarInput(json));
         when(validadorMock.validar(cookies)).thenReturn(true);
 
-        Ingrediente ingrediente = new Ingrediente();
-        ingrediente.setValor_venda(5.0);
-
-        // Simula a busca de ingredientes pelo DAO
         when(daoIngredienteMock.pesquisaPorNome(any(Ingrediente.class)))
-                .thenReturn(ingrediente);
+                .thenAnswer(invocation -> {
+                    Ingrediente pesquisado = invocation.getArgument(0);
+
+                    Ingrediente ingrediente = new Ingrediente();
+
+                    if ("Queijo".equals(pesquisado.getNome())) {
+                        ingrediente.setNome("Queijo");
+                        ingrediente.setValor_venda(5.0);
+                        return ingrediente;
+                    }
+
+                    if ("Bacon".equals(pesquisado.getNome())) {
+                        ingrediente.setNome("Bacon");
+                        ingrediente.setValor_venda(5.0);
+                        return ingrediente;
+                    }
+
+                    return null;
+                });
 
         Lanche lanche = new Lanche();
 
@@ -202,8 +231,20 @@ public class SalvarLancheClienteTest {
         verify(daoLancheMock, times(1)).salvarCliente(captorLanche.capture());
         verify(daoLancheMock, times(1)).pesquisaPorNome(any(Lanche.class));
         // Verifica se os dois ingredientes foram vinculados ao lanche
+        ArgumentCaptor<Ingrediente> captorIngrediente = ArgumentCaptor.forClass(Ingrediente.class);
+
         verify(daoLancheMock, times(2))
-                .vincularIngrediente(any(Lanche.class), any(Ingrediente.class));
+                .vincularIngrediente(any(Lanche.class), captorIngrediente.capture());
+
+        List<Ingrediente> ingredientesVinculados = captorIngrediente.getAllValues();
+
+        assertEquals(2, ingredientesVinculados.size());
+
+        assertTrue(ingredientesVinculados.stream()
+                .anyMatch(i -> "Queijo".equals(i.getNome()) && i.getQuantidade() == 1));
+
+        assertTrue(ingredientesVinculados.stream()
+                .anyMatch(i -> "Bacon".equals(i.getNome()) && i.getQuantidade() == 2));
 
         Lanche lancheSalvo = captorLanche.getValue();
 
@@ -267,5 +308,20 @@ public class SalvarLancheClienteTest {
         new SalvarLancheTestavel().doPost(request, response);
 
         verify(response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    // Testa se o response foi configurado como JSON UTF-8
+    @Test
+    public void deveConfigurarResponseQuandoProcessaRequisicao() throws Exception {
+        Cookie[] cookies = { new Cookie("token", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validar(cookies)).thenReturn(false);
+
+        new SalvarLancheTestavel().processRequest(request, response);
+
+        verify(response, atLeastOnce()).setContentType("application/json");
+        verify(response, atLeastOnce()).setCharacterEncoding("UTF-8");
     }
 }

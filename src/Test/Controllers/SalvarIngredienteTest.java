@@ -7,6 +7,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.any;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -24,10 +27,14 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SalvarIngredienteTest {
 
-    @Mock private ValidadorCookie validadorMock;
-    @Mock private DaoIngrediente daoIngredienteMock;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private ValidadorCookie validadorMock;
+    @Mock
+    private DaoIngrediente daoIngredienteMock;
+    @Mock
+    private HttpServletRequest request;
+    @Mock
+    private HttpServletResponse response;
 
     private StringWriter respostaHttp;
 
@@ -97,6 +104,70 @@ public class SalvarIngredienteTest {
 
         new SalvarIngredienteTestavel().processRequest(request, response);
 
+        verify(daoIngredienteMock, times(1)).salvar(any());
+
         assertTrue(respostaHttp.toString().contains("Ingrediente Salvo"));
+    }
+
+    @Test
+    public void semCookieDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenReturn(null);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+
+        new SalvarIngredienteTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void excecaoAoLerCookiesDeveRetornarErro() throws Exception {
+        when(request.getCookies()).thenThrow(new NullPointerException());
+        when(request.getInputStream()).thenReturn(criarInput(""));
+
+        new SalvarIngredienteTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doPostDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new SalvarIngredienteTestavel().doPost(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void doGetDeveChamarProcessRequest() throws Exception {
+        Cookie[] cookies = { new Cookie("tokenFuncionario", "x") };
+
+        when(request.getCookies()).thenReturn(cookies);
+        when(request.getInputStream()).thenReturn(criarInput(""));
+        when(validadorMock.validarFuncionario(cookies)).thenReturn(false);
+
+        new SalvarIngredienteTestavel().doGet(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
+    }
+
+    @Test
+    public void deveRetornarDescricaoDoServlet() {
+        String descricao = new SalvarIngredienteTestavel().getServletInfo();
+
+        assertTrue(descricao.contains("Short description"));
+    }
+
+    @Test
+    public void semCorpoNaRequisicaoDeveRetornarErro() throws Exception {
+        when(request.getInputStream()).thenReturn(null);
+
+        new SalvarIngredienteTestavel().processRequest(request, response);
+
+        assertTrue(respostaHttp.toString().contains("erro"));
     }
 }
