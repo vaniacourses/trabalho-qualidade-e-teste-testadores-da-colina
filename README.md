@@ -1,6 +1,6 @@
 # Trabalho de Qualidade e Teste de Software — Testadores da Colina
 
-Repositório do trabalho da disciplina **Qualidade e Teste de Software (A1)** — UFF.
+Repositório do trabalho da disciplina **Qualidade e Teste de Software (A1)** — UFF.  
 Sistema sob teste: **Lanchonete Online ("Cade Burger's")**.
 
 **Equipe:** Brenda de Souza, Carlos Eduardo Alves, Paulo Rodrigo Figueiredo e Yuri Moura
@@ -16,76 +16,89 @@ Sistema sob teste: **Lanchonete Online ("Cade Burger's")**.
 | ✅ **Evidências de teste manual** (TestLink) | Disponíveis na seção *Testes Manuais* do Plano de Testes |
 |📝 **Slides Apresentação Final** (Google Slides)|[Abrir documento](https://docs.google.com/presentation/d/1DJaq9766klH-l0aILemXVTwcEMUgnv21Nz4_2US03Pc/edit?usp=sharing)|
 
-### Casos de teste unitários
-Os testes cobrem controllers com lógica não-trivial (autenticação, fluxo de compra e montagem de lanche):
+## 📊 Resultados dos Testes
 
-- [`LoginTest`](src/Test/Controllers/LoginTest.java) · [`LoginFuncionarioTest`](src/Test/Controllers/LoginFuncionarioTest.java) — autenticação
-- [`CadastroTest`](src/Test/Controllers/CadastroTest.java) — cadastro de cliente + endereço
-- [`ComprarTest`](src/Test/Controllers/ComprarTest.java) — fluxo de finalização de pedido
-- [`SalvarLancheClienteTest`](src/Test/Controllers/SalvarLancheClienteTest.java) — montagem de lanche personalizado
-- [`SalvarIngredienteTest`](src/Test/Controllers/SalvarIngredienteTest.java) · [`GetRelatorioGastosTest`](src/Test/Controllers/GetRelatorioGastosTest.java) · [`GetBebidasTest`](src/Test/Controllers/GetBebidasTest.java) · [`GetLanchesTest`](src/Test/Controllers/GetLanchesTest.java)
+### Cobertura Estrutural (JaCoCo)
 
-Para executar os testes, rode `mvn test` na raiz do projeto.
+Foram desenvolvidos testes unitários utilizando **JUnit 4** e **Mockito** para classes do pacote `Controllers`, priorizando componentes com lógica mais complexa.
 
-# APS-04-Lanchonete-Online-em-Java
+Principais resultados:
 
-## Sobre
-Com o objetivo de desenvolver a capacidade dos alunos e obter nota na disciplina APS (Atividades Práticas Supervisionadas), 
-foi proposto um projeto de desenvolvimento de um sistema para uma lanchonete online, onde o administrador consiga controlar 
-os pedidos da lanchonete e emitir relatórios. A lanchonete devera permitir o cadastro dos usuários, para que eles possam realizar seus pedidos, 
-e o cadastro de produtos, que ficariam por parte do administrador. Após o cadastro,  cliente poderá utilizar os ingredientes cadastrados para 
-criar seu lanche personalizado. O sistema deverá fazer o controle dos pedidos de forma que agrade os clientes, e controlar tambem o estoque de produtos.
+| Classe | Cobertura de Instruções | Cobertura de Ramos |
+|----------|:----------------------:|:-----------------:|
+| `cadastro` | 93% | 50% |
+| `comprar` | 92% | 93% |
+| `salvarLancheCliente` | 81% | 75% |
+| `salvarIngrediente` | 84% | 75% |
+| `getLanches` | 84% | 100% |
+| `getBebidas` | 84% | 100% |
+| `getRelatorioGastos` | 84% | 100% |
+| `login` | 83% | 83% |
+| `loginFuncionario` | 83% | 83% |
 
-## Tecnologias Utilizadas
+### 🧬 Teste Baseado em Defeitos (PIT Mutation Testing)
 
-O Sistema funciona com base em um Frontend Utilizando HTML 5, CSS3 e JavaScript, e um Backend baseado em Java Web utilizando-se do Servidor Glassfish 4 
-e muito baseado no uso de Servlets para a Comunicação atraves de requisições. Além disso o Sistema utiliza das Bibliotecas gson-2.8.6 e json-20200518 
-Para a manipulação de Arquivos JSON dentro do Código Java, e de um Banco de Dados PostgreSQL, do qual o Código base também se encontra no repositório.
+Os testes também foram avaliados utilizando a ferramenta **PIT Mutation Testing**, responsável por inserir mutações artificiais no código e verificar se elas são detectadas pelos testes.
 
-## Alguns Screenshots
+Resultados obtidos:
 
-![alt text](https://i.ibb.co/BPn99jW/248f5162-df3a-4754-8ade-82b9784f94d8.jpg)
-![alt text](https://i.ibb.co/GM3r7Dd/daf6e1f9-676e-4a27-9669-80036dc52cce.jpg)
-![alt text](https://i.ibb.co/kXdFFq5/e378bda9-bcc8-4483-bb2f-f2143a79817e.jpg)
-![alt text](https://i.ibb.co/z7kqx4x/a5a0e3f3-3605-4d3f-b2ba-f54c2ef76f18.jpg)
-![alt text](https://i.ibb.co/C6kMZLW/c1bad7f9-c79a-4516-9d08-bc2548ee9880.jpg)
-![alt text](https://i.ibb.co/2321674/8a74fb26-1db0-49df-b2d7-2479d0567a4e.jpg)
-![alt text](https://i.ibb.co/2YSbvGZ/8d3386e3-d13b-4a42-b389-151fbadb1d77.jpg)
+- **Line Coverage:** 89% (193/216)
+- **Mutation Coverage:** 65% (58/89)
+- **Test Strength:** 84% (58/69)
 
-## Como rodar o projeto
+O valor de **Test Strength** obtido foi superior à meta mínima de 80%, indicando boa capacidade dos testes em detectar defeitos.
 
-### Pré-requisitos
-- [Docker](https://www.docker.com/get-started) e [Docker Compose](https://docs.docker.com/compose/install/)
-- [Java 8+](https://adoptopenjdk.net/) e [Maven](https://maven.apache.org/)
+## 🧪 Casos de Teste Unitários
 
-### Passos para executar
+Os testes cobrem classes com lógica mais complexa do sistema:
 
-1. **Clone o repositório:**
+- `LoginTest` e `LoginFuncionarioTest` — autenticação.
+- `CadastroTest` — cadastro de cliente e endereço.
+- `ComprarTest` — fluxo de compra e finalização do pedido.
+- `SalvarLancheClienteTest` — criação de lanche personalizado.
+- `SalvarIngredienteTest` — cadastro de ingredientes.
+- `GetBebidasTest` — consulta das bebidas cadastradas.
+- `GetLanchesTest` — consulta dos lanches cadastrados.
+- `GetRelatorioGastosTest` — geração de relatórios.
 
-   ```bash
-   git clone <url-do-repositorio>
-   cd APS-04-Lanchonete-Online-em-Java
-   ```
+Para executar os testes:
 
-2. **Suba os containers com Docker Compose:**
+```bash
+mvn test
+```
 
-   ```bash
-   docker-compose up --build -d
-   ```
+Para executar a análise de mutação:
 
-   Isso irá criar e iniciar os containers do banco de dados PostgreSQL e do servidor Tomcat com a aplicação.
+```bash
+mvn org.pitest:pitest-maven:mutationCoverage
+```
 
-3. **Acesse a aplicação:**
+## 🍔 Sobre o Sistema
 
-   - API: [http://localhost:8080](http://localhost:8080)
+O sistema **Lanchonete Online ("Cade Burger's")** permite que clientes realizem pedidos e montem lanches personalizados, enquanto administradores podem gerenciar produtos e acompanhar relatórios.
 
-4. **Para parar e remover tudo:**
+A aplicação foi desenvolvida utilizando Java Web, Servlets, HTML, CSS, JavaScript e PostgreSQL.
 
-   ```bash
-   docker-compose down -v
-   ```
+## 🙏 Créditos
 
-### Observações
-- O banco de dados será inicializado automaticamente com as tabelas necessárias e o usuário de admin para login.
-- Caso precise alterar configurações, edite os arquivos `docker-compose.yml` ou `banco.sql`.
-- Se houver problemas de cache no navegador, utilize Ctrl+F5 ou limpe o cache manualmente.
+Este trabalho foi desenvolvido a partir de um projeto-base de uma aplicação de lanchonete online disponibilizado anteriormente para fins acadêmicos.
+
+A equipe **Testadores da Colina** realizou adaptações e acrescentou os artefatos de qualidade de software, incluindo:
+
+- Plano de testes;
+- Casos de teste unitários;
+- Testes de integração;
+- Evidências de testes manuais;
+- Análise de cobertura com JaCoCo;
+- Testes baseados em defeitos com PIT Mutation Testing;
+- Registro e documentação de defeitos.
+
+## 🖼️ Screenshots
+
+![Tela 1](https://i.ibb.co/BPn99jW/248f5162-df3a-4754-8ade-82b9784f94d8.jpg)
+![Tela 2](https://i.ibb.co/GM3r7Dd/daf6e1f9-676e-4a27-9669-80036dc52cce.jpg)
+![Tela 3](https://i.ibb.co/kXdFFq5/e378bda9-bcc8-4483-bb2f-f2143a79817e.jpg)
+![Tela 4](https://i.ibb.co/z7kqx4x/a5a0e3f3-3605-4d3f-b2ba-f54c2ef76f18.jpg)
+![Tela 5](https://i.ibb.co/C6kMZLW/c1bad7f9-c79a-4516-9d08-bc2548ee9880.jpg)
+![Tela 6](https://i.ibb.co/2321674/8a74fb26-1db0-49df-b2d7-2479d0567a4e.jpg)
+![Tela 7](https://i.ibb.co/2YSbvGZ/8d3386e3-d13b-4a42-b389-151fbadb1d77.jpg)
